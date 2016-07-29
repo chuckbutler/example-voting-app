@@ -16,8 +16,29 @@ namespace Worker
         {
             try
             {
-                var pgsql = OpenDbConnection("Server=db;Username=postgres;");
-                var redis = OpenRedisConnection("redis").GetDatabase();
+                var redis_host = Environment.GetEnvironmentVariable("REDIS_HOST");
+
+                if(redis_host == null) {
+                  redis_host = "redis";
+                }
+
+                var postgres_host = Environment.GetEnvironmentVariable("PG_HOST");
+                var postgres_user = Environment.GetEnvironmentVariable("PG_USER");
+                var postgres_pass = Environment.GetEnvironmentVariable("PG_PASS");
+                var postgres_db = Environment.GetEnvironmentVariable("PG_DB");
+
+                string pg_connection = "";
+
+                if(postgres_host == null) {
+                  pg_connection="Server=db;Username=postgres;";
+                } else {
+                  pg_connection="Host=" + postgres_host;
+                  pg_connection = pg_connection + ";User Id=" + postgres_user;
+                  pg_connection = pg_connection + ";Password=" + postgres_pass;
+                  pg_connection = pg_connection + ";Database=" + postgres_db + ";";
+                }
+                var pgsql = OpenDbConnection(pg_connection);
+                var redis = OpenRedisConnection(redis_host).GetDatabase();
 
                 var definition = new { vote = "", voter_id = "" };
                 while (true)
@@ -66,7 +87,7 @@ namespace Worker
 
             var command = connection.CreateCommand();
             command.CommandText = @"CREATE TABLE IF NOT EXISTS votes (
-                                        id VARCHAR(255) NOT NULL UNIQUE, 
+                                        id VARCHAR(255) NOT NULL UNIQUE,
                                         vote VARCHAR(255) NOT NULL
                                     )";
             command.ExecuteNonQuery();

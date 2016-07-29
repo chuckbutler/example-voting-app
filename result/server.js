@@ -11,6 +11,16 @@ var express = require('express'),
 io.set('transports', ['polling']);
 
 var port = process.env.PORT || 4000;
+var pg_host = process.env.PG_HOST || 'db';
+var pg_user = process.env.PG_USER || 'postgres';
+var pg_pass = process.env.PG_PASS || '';
+var pg_db = process.env.PG_DB || 'postgres';
+
+if(pg_host != null) {
+  pg_connection_string = 'postgres://' + pg_user + ':' + pg_pass + '@' + pg_host + '/' + pg_db;
+} else {
+  pg_connection_string = 'postgres://postgres@db/postgres';
+}
 
 io.sockets.on('connection', function (socket) {
 
@@ -24,7 +34,7 @@ io.sockets.on('connection', function (socket) {
 async.retry(
   {times: 1000, interval: 1000},
   function(callback) {
-    pg.connect('postgres://postgres@db/postgres', function(err, client, done) {
+    pg.connect(pg_connection_string, function(err, client, done) {
       if (err) {
         console.error("Waiting for db");
       }
